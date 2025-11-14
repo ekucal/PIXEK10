@@ -75,11 +75,10 @@ def loadData(self):
         for line in file:
             line = line.strip()
             if not line.startswith("#"): 
-                x,yr = line.split()
+                x,y, yb = line.split()
                 E.append(float(x))
-                Yr.append(float(yr))
-                B.append(float(yr))
-                Y.append(float(yr))
+                Yr.append(float(yb))
+                Y.append(float(y))
         material = re.findall('#    Material: (\S*)', infoRead)
         tiltAngle = re.findall('#    Tilt angle: (\S*)', infoRead)
         axis = re.findall('#    Axis: (\S*)', infoRead)
@@ -94,11 +93,12 @@ def loadData(self):
     new_spectrum.append(Y)
     new_spectrum.append(Info)
     new_spectrum.append(number)
+    new_spectrum.append(Yr)
     self.listSpectraCount.append(new_spectrum)
     newTree = self.treeC.insert('', 'end', text=str(number), values=(str(number), str(tiltAngle[0]), str(plane[0]), str(axis[0]), str(material[0])))
     return E,Y,Info
 
-def addSpectra(self, x, y, spectrumInfo):
+def addSpectra(self, x, y, yr, spectrumInfo):
     new_spectrum = []
     number = len(self.listSpectraCount) + 1
     Info = spectrumInfo
@@ -106,6 +106,7 @@ def addSpectra(self, x, y, spectrumInfo):
     new_spectrum.append(y)
     new_spectrum.append(Info)
     new_spectrum.append(number)
+    new_spectrum.append(yr)  
     self.listSpectraCount.append(new_spectrum)
     newTree = self.treeC.insert('', 'end', text=str(number), values=(str(number), str(Info['tiltAngle']), str(Info['plane']), str(Info['axis']), str(Info['material'])))
     print('done')
@@ -122,8 +123,6 @@ def plotSpectraCount(self):
             if s[3] == idSpectrum:
                 self.listSpectraCountS.append(s)
                 self.__plt__.set_yscale('log')
-                #label=s[2]['tiltAngle']
-                
                 self.__plt__.plot(s[0], s[1], '-', label=s[2]['tiltAngle'], markersize=0.5)
                 self.legend=self.__plt__.legend()
     fig.canvas.draw()
@@ -162,11 +161,15 @@ def showPlotCounts(self):
     for s in self.listSpectraCountS:
         i1 = i1 + 1
         as_counts = 0
+        be = 0
+        yi = 0
         err = 0
         for o in range(0, len(s[0][:])):
             if float(s[0][o]) > a_min and float(s[0][o]) < b_max:
                 as_counts = as_counts+float(s[1][o])
-                #err = sqrt(float(s[1][o]) + float(s[1][o]))
+                be = be - float(s[1][o])+float(s[4][o])
+                yi = yi + float(s[4][o])
+        err = sqrt(yi+be)   # page 87
         PeakCounts.id = i1
         PeakCounts.peak = a_min
         PeakCounts.material = s[2]['material']
@@ -190,7 +193,7 @@ def showPlotCounts(self):
     self.PIXEcount.append(li)
     le = len(self.treeAS.get_children()) + 1
     self.treeAS.insert('', 'end', text=str(le), values=(str(numberScan)))
-    self.__plt__.bar(ang, self.C, yerr=self.Error)
+    self.__plt__.bar(ang, self.C, yerr=self.Error,  capsize=5, color="skyblue", edgecolor="black", alpha=0.8, width=0.1)
     fig.canvas.draw()
     return self.N, self.C, self.Error
 
@@ -205,21 +208,32 @@ def showPlotCountsN(self):
     i1_error = 0
     for s in self.listSpectraCountS:
         R_counts = 0
+        beR= 0
+        yiR= 0
         if s[2]['tiltAngle'] == 'R':
             for o in range(0, len(s[0][:])):
                 if float(s[0][o]) > a_min and float(s[0][o]) < b_max:
                     R_counts = R_counts+float(s[1][o])
+                    beR = beR - float(s[1][o])+float(s[4][o])
+                    yiR = yiR + float(s[4][o])
+            errR = sqrt(yiR+beR)
         else:
             R_counts = 1
     for s in self.listSpectraCountS:
         i1 = i1 + 1
         as_counts = 0
         err = 0
+        be = 0
+        yi = 0
         for o in range(0, len(s[0][:])):
             if float(s[0][o]) > a_min and float(s[0][o]) < b_max:
                 as_counts = as_counts+float(s[1][o])
-                #err = sqrt(float(s[1][o]) + float(s[1][o]))
+                be = be - float(s[1][o])+float(s[4][o])
+                yi = yi + float(s[4][o])
+        asc = as_counts
+        err1 = sqrt(yi+be)
         as_counts = as_counts / R_counts
+        err = as_count * sqrt((err1/asc)**2 + (errR/R_counts)**2)
         PeakCounts.id = i1
         PeakCounts.peak = a_min
         PeakCounts.material = s[2]['material']
@@ -241,7 +255,7 @@ def showPlotCountsN(self):
     self.PIXEcount.append(li)
     le = len(self.treeAS.get_children()) + 1
     self.treeAS.insert('', 'end', text=str(le), values=(str(numberScan)))
-    self.__plt__.bar(ang, self.C, yerr=self.Error)
+    self.__plt__.bar(ang, self.C, yerr=self.Error,  capsize=5, color="skyblue", edgecolor="black", alpha=0.8, width=0.1)
     fig.canvas.draw()
     return self.N, self.C, self.Error
 

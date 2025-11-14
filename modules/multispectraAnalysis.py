@@ -41,16 +41,17 @@ def openFolder(self):
         print('WARNING: no data loaded')    
     E = []
     Y = []
+    Yr = []
     with open(fdRes.name, 'r', encoding="utf-8") as file:
         infoRead = file.read()
         file.seek(0)
         for line in file:
             line = line.strip()
             if not line.startswith("#"): 
-                x,y = line.split()
+                x,y, yr = line.split()
                 E.append(float(x))
                 Y.append(float(y))
-        
+                Yr.append(float(yr))
         material = re.findall('#    Material: (\S*)', infoRead)
         tiltAngle = re.findall('#    Tilt angle: (\S*)', infoRead)
         axis = re.findall('#    Axis: (\S*)', infoRead)
@@ -65,6 +66,7 @@ def openFolder(self):
     new_spectrum.append(Y)
     new_spectrum.append(Info)
     new_spectrum.append(number)
+    new_spectrum.append(yr)
     self.listSpectraO.append(new_spectrum)
     newTree = self.tree.insert('', 'end', text=str(number), values=(str(number), str(tiltAngle[0]), str(plane[0]), str(axis[0]), str(material[0])))
     return E,Y,Info

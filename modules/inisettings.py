@@ -28,7 +28,7 @@ def setDefaultIni():
                          'weight': 'normal'}
         
     ini['reduction']={'name' : ' Ignore',
-                           'fromTo' : '0:-1'}
+                           'fromTo' : '1:20'}
     
     ini['calibration']={    'onoff' : '0',
                             'method' : 'Ignore',

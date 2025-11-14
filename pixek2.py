@@ -395,7 +395,7 @@ class AppGUI():
             else:
                 x=self.spectrum.Xr
         self.spectrum.Xb=x
-        #self.spectrum.Yb=y
+        self.spectrum.Yb=y
         self.plotData([x,x,x],
                      [y,b,self.spectrum.Yb],
                      [self.filtr.plotScheme,'-k','-m'],
@@ -629,25 +629,23 @@ class AppGUI():
 
 ##############################################
     def saveMany(self):
+        # wybierz folder
         from datetime import datetime
-        folder = fd.askdirectory()
-        if folder:
-            for sp in self.listSpectraB:
-                name = sp[2]['tiltAngle'] #+ '.txt'
-                sciezka_pliku = os.path.join(folder, name + '.txt')
-                with open(sciezka_pliku, 'w') as fid:
-                    fid.write('#    DateTime: '+datetime.today().strftime('%Y-%m-%d %H:%M:%S')+'\n')
-                    fid.write('#    Material: ' + sp[2]['material'] + '\n')
-                    fid.write('#    Axis: ' + sp[2]['axis']  + '\n')
-                    fid.write('#    Plane: ' + sp[2]['plane']  + '\n')
-                    fid.write('#    Tilt angle: ' + sp[2]['tiltAngle']  + '\n')
-                    fid.write('#    Dose: ' + sp[2]['dose']  + '\n')
-                    fid.write('#    Energy [keV]    Raw Yield       Yield-Background   \n')
-                    for i in range(0,len(sp[0][:])):
-                        ftok=f'{sp[0][i]:9.6f} {sp[1][i]:12.6f} {sp[5][i]:12.6f}\n'
-                        fid.write(ftok)
-                messagebox.showinfo("Done.", f"Spectra saved in:\n{sciezka_pliku}")
-                fid.close()
+        idir= filedialog.askdirectory(title="Select folder")
+        for sp in self.listSpectraB:
+            name = sp[2]['tiltAngle'] + '.txt'
+            with open(f"{idir}/{name}", 'w') as fid:
+                fid.write('#    DateTime: '+datetime.today().strftime('%Y-%m-%d %H:%M:%S')+'\n')
+                fid.write('#    Material: ' + sp[2]['material'] + '\n')
+                fid.write('#    Axis: ' + sp[2]['axis']  + '\n')
+                fid.write('#    Plane: ' + sp[2]['plane']  + '\n')
+                fid.write('#    Tilt angle: ' + sp[2]['tiltAngle']  + '\n')
+                fid.write('#    Dose: ' + sp[2]['dose']  + '\n')
+                fid.write('#    Energy [keV]    Raw Yield       Yield   \n')
+            for i in range(0,len(sp[0][:])):
+                ftok=f'{sp[0][i]:9.6f} {sp[1][i]:12.6f} {sp[5][i]:12.6f}\n'
+                fid.write(ftok)
+            fid.close()
    
     
 
@@ -778,14 +776,18 @@ class AppGUI():
             return
         
         x=self.spectrum.Xb
-        y=self.spectrum.Yr
-        ynb=self.spectrum.Yb
+        print('x',x)
+        y=self.spectrum.Yb
         inf=self.spectrum.Info
-
+        #yfr=self.Yfiltr
+        #b=self.baseline
+        #ynb=self.Yfree  
         ext=dRes.name[-3:]
-
+        
+        #if ext=='txt':
         fid=open(dRes.name,'w')
-
+        
+             #fid.write('#ver: 0 \n')
         fid.write('#    DateTime: '+datetime.today().strftime('%Y-%m-%d %H:%M:%S')+'\n')
         fid.write('#    Spectrum file: '+ self.spectrum.ifileName +'\n')
         fid.write('#    Material: ' + self.spectrum.Material + '\n')
@@ -807,10 +809,10 @@ class AppGUI():
         #fid.write('#    Wavelet level: '+str(self.dataInfo['waveletlevel'])+'\n')
         #fid.write('#    Data size RC: '+str(self.X.shape[0])+' 4\n')
         #fid.write('#--- x ------ input ------ baseline ------ output ----\n')
-        fid.write('#    Energy [keV]    Raw Yield   Yield-Background \n')
+        fid.write('#    Energy [keV]    Yield   \n')
         #str(inf[1]), str(inf[2]), str(inf[3])+'\n')                                    
         for i in range(0,len(x[:])):
-            ftok=f'{x[i]:9.6f} {y[i]:12.6f} {ynb[i]:12.6f}\n'
+            ftok=f'{x[i]:9.6f} {y[i]:12.6f}\n'
             fid.write(ftok)                                             
         fid.close()
         #else:
@@ -843,9 +845,9 @@ class AppGUI():
         #self.root.bind('<Destroy>',self.Destroy)
         self.root.protocol("WM_DELETE_WINDOW",self.Destroy)
         #self.root.bind('<Close>',self.Destroy)
-        #ttk.Style("cyborg") #superhero")
+        ttk.Style("cyborg") #superhero")
         #ttk.Style("darkly")
-        ttk.Style("superhero")
+
         ######################
 
         labelColor = "danger"
@@ -866,10 +868,10 @@ class AppGUI():
         btn1.pack(side=tk.LEFT, padx=5)
         btn2 = ttk.Button(buttonbar, text="Multispectra analysis", command=self.show_frame_plot, bootstyle="primary")
         btn2.pack(side=tk.LEFT, padx=5)
-        btn3 = ttk.Button(buttonbar, text="Angular scan", command=self.show_frame_count, bootstyle="primary")
+        btn3 = ttk.Button(buttonbar, text="Counts", command=self.show_frame_count, bootstyle="primary")
         btn3.pack(side=tk.LEFT, padx=5)
-        #btn4 = ttk.Button(buttonbar, text="Angular scan", command=self.show_frame_angular_scan, bootstyle="primary")
-        #btn4.pack(side=tk.LEFT, padx=5)
+        btn4 = ttk.Button(buttonbar, text="Angular scan", command=self.show_frame_angular_scan, bootstyle="primary")
+        btn4.pack(side=tk.LEFT, padx=5)
         btn5 = ttk.Button(buttonbar, text="Info", command=self.show_info, bootstyle="primary")
         btn5.pack(side=tk.LEFT, padx=5)
 
@@ -883,7 +885,7 @@ class AppGUI():
 
         self.notebook_2 = ttk.Frame(self.notebook) 
         self.notebook_3 = ttk.Frame(self.notebook) 
-        #self.notebook_4 = ttk.Frame(self.notebook)
+        self.notebook_4 = ttk.Frame(self.notebook)
         self.notebook_5 = ttk.Frame(self.notebook)
 
         # Info frame! (no place for plot)
@@ -1397,20 +1399,20 @@ class AppGUI():
         self.frame3_1 = ttk.Frame(self.notebook_3) 
         self.frame3_1.pack(pady=5, padx=5, fill="both")
 
-        self.CountsOptions = ["Counts", "Plot"]
+        self.CountsOptions = ["PIXE/C", "RBS/C"]
         
         self.framePIXEC = ttk.Frame(self.notebook_3)
-        self.frameOpenAS = ttk.Frame(self.notebook_3)
+        self.frameRBSC = ttk.Frame(self.notebook_3)
 
 
         for step in self.CountsOptions:
             frameStepC = ttk.Frame(self.notebook_3)
             frameStepC.pack(pady=5, fill=X)
             
-            if step == "Counts":
+            if step == "PIXE/C":
                 frame = self.framePIXEC
-            if step == "Plot":
-                frame = self.frameOpenAS
+            if step == "RBS/C":
+                frame = self.frameRBSC
 
             varStepC = IntVar() # sprawdza ktory przycisk jest klikniety
             varStepC.set(0)
@@ -1459,8 +1461,89 @@ class AppGUI():
         #ttk.Button(self.framePIXEC, text="Show plot", style="TButton", command=lambda: show_plot_counts(self), width=13).place(x=37, y=450)
         ttk.Button(self.framePIXEC, text="Save to file", style="TButton", command=lambda: saveCount(self), width=13).place(x=37, y=490)
         
+        ## RBS/C
+        # Dane: wybierz plik, zdefiniuj kat, dawka
+        # First add random
+        # Then attach files with scan from differeat angles
+        # Specify range of channels for counts
+        # Give name to your data
+        # Add list of counts to plot
+        ttk.Label(self.frameRBSC, text="Load random spectrum").place(x=20, y=20)
+        ttk.Button(self.frameRBSC, text="Open file", style="TButton", command=lambda: openRandom(self), width=25).place(x=20, y=50)
+        ttk.Label(self.frameRBSC, text="Dose").place(x=20, y=90)
+        self.doseRBS = StringVar()
+        self.doseRBS_entry = ttk.Entry(self.frameRBSC, width=5, textvariable=self.doseRBS)
+        self.doseRBS_entry.place(x=100, y=90)
+        self.doseRBS.set('10')
+
+        ttk.Label(self.frameRBSC, text="Load spectra").place(x=20, y=120)
+        ttk.Button(self.frameRBSC, text="Open file", style="TButton", command=lambda: openRBSC(self), width=25).place(x=20, y=150)
+        ttk.Label(self.frameRBSC, text="Angle").place(x=20, y=190)
+        self.angleRBS = StringVar()
+        self.angleRBS_entry = ttk.Entry(self.frameRBSC, width=5, textvariable=self.angleRBS)
+        self.angleRBS_entry.place(x=100, y=190)
+        self.angleRBS.set('0')
+        ttk.Label(self.frameRBSC, text="Dose").place(x=20, y=220)
+        self.doseRBSa = StringVar()
+        self.doseRBSa_entry = ttk.Entry(self.frameRBSC, width=5, textvariable=self.doseRBSa)
+        self.doseRBSa_entry.place(x=100, y=220)
+        self.doseRBSa.set('10')
+
+        ttk.Label(self.frameRBSC, text="Channel range").place(x=20, y=250)
+        self.channelRBSmin = StringVar()
+        self.channelRBSmin_entry = ttk.Entry(self.frameRBSC, width=4, textvariable=self.channelRBSmin)
+        self.channelRBSmin_entry.place(x=50, y=280)
+        self.channelRBSmin.set('1')
+        self.channelRBSmax = StringVar()
+        self.channelRBSmax_entry = ttk.Entry(self.frameRBSC, width=4, textvariable=self.channelRBSmax)
+        self.channelRBSmax_entry.place(x=100, y=280)
+        self.channelRBSmax.set('2000')
+        ttk.Button(self.frameRBSC, text="Show", style="TButton", command=lambda: showRBSlim(self), width=10).place(x=180, y=280)
+        ttk.Button(self.frameRBSC, text="Calculate", style="TButton", command=lambda: RBSas(self), width=10).place(x=20, y=320)
+        
+        ttk.Label(self.frameRBSC, text="Name").place(x=20, y=360)
+        self.nameRBS = StringVar()
+        self.nameRBS_entry = ttk.Entry(self.frameRBSC, width=10, textvariable=self.nameRBS)
+        self.nameRBS_entry.place(x=100, y=360)
+        ttk.Button(self.frameRBSC, text="Save", style="TButton", command=lambda: RBSsave(self), width=10).place(x=20, y=400)
+        
+
+
+
+
+
+
         #########################
         ### Angular Scanning ####
+        
+        self.frame4_1 = ttk.Frame(self.notebook_4) 
+        self.frame4_1.pack(pady=5, padx=5, fill="both")
+
+        self.ASOptions = ["Load scans", "Plot options", "Save"]
+        
+        self.frameOpenAS = ttk.Frame(self.notebook_4)
+        self.framePlotAS = ttk.Frame(self.notebook_4)
+        self.frameSaveAS = ttk.Frame(self.notebook_4)
+
+
+        for step in self.ASOptions:
+            frameStepAS = ttk.Frame(self.notebook_4)
+            frameStepAS.pack(pady=5, fill=X)
+            
+            if step == "Load scans":
+                frame = self.frameOpenAS
+            if step == "Plot options":
+                frame = self.framePlotAS
+            if step == "Save":
+                frame = self.frameSaveAS
+
+            varStepAS = IntVar() # sprawdza ktory przycisk jest klikniety
+            varStepAS.set(0)
+
+            self.bt_4 = ttk.Checkbutton(frameStepAS, width=40, text=step, variable = varStepAS, style='Toolbutton')
+            self.bt_4.config(command=lambda var=varStepAS, btn=self.bt_4, sub=frame, frame=frameStepAS: self.toggleAS(var, btn, sub, frame))
+            self.bt_4.pack(pady=5, padx=2)
+        
         
         self.treeAS = ttk.Treeview(self.frameOpenAS, columns=("ID", "Name"), height=10, show="headings")
         self.treeAS.heading("ID", text="ID")
@@ -1469,6 +1552,9 @@ class AppGUI():
         self.treeAS.column("Name", width=1, stretch=True)
         self.treeAS.pack(side="top", pady=5, fill="x")
         self.treeAS.bind("<ButtonRelease-1>", self.clickTreeAS)
+
+
+
 
         ### Notebook 4 ###############################
         ################ INFO ########################
@@ -1585,8 +1671,20 @@ class AppGUI():
             frame_s.pack(after=frame_n, fill="both", expand=1, padx=10, pady=5)  # Dodanie sub_frame pod frame
             if frame_s != self.framePIXEC:
                 self.framePIXEC.pack_forget()
+            if frame_s != self.frameRBSC:
+                self.frameRBSC.pack_forget()
+        else:
+            frame_s.pack_forget()
+
+    def toggleAS(self, show, toggle_button, frame_s, frame_n):
+        if bool(show.get()):
+            frame_s.pack(after=frame_n, fill="both", expand=1, padx=10, pady=5)  # Dodanie sub_frame pod frame
             if frame_s != self.frameOpenAS:
                 self.frameOpenAS.pack_forget()
+            if frame_s != self.framePlotAS:
+                self.framePlotAS.pack_forget()
+            if frame_s != self.frameSaveAS:
+                self.frameSaveAS.pack_forget()
         else:
             frame_s.pack_forget()
 
